@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escáner QR - Verificación</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f0f2f5;
+    }
+    .card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    #reader {
+      width: 100%;
+      margin-top: 15px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .status-box {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      display: none;
+    }
+    .status-loading { background: #fff3cd; color: #856404; display: block; }
+    .status-valid { background: #d4edda; color: #155724; display: block; }
+    .status-invalid { background: #f8d7da; color: #721c24; display: block; }
+    
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-copy { background: #0d6efd; color: white; }
+    .btn-scan { background: #6c757d; color: white; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Escanear Código QR</h2>
+    <p>Apunta con tu cámara al código para verificarlo</p>
+    
+    <div id="reader"></div>
+
+    <!-- Indicador de Estado de la API -->
+    <div id="statusBox" class="status-box"></div>
+
+    <div class="actions">
+      <button id="btnCopy" class="btn-copy" onclick="copiarCodigo()" style="display:none;">Copiar Código</button>
+      <button id="btnReset" class="btn-scan" onclick="reiniciarEscaneo()" style="display:none;">Escanear Otro</button>
+    </div>
+  </div>
+
+  <script>
+    let html5QrcodeScanner;
+    let codigoActual = "";
+
+    // 🔴 AQUÍ SE CONECTA CON EL PUNTO 3 (API DE ROJAS)
+    const API_URL = "https://api-de-rojas.com/verificar-qr"; // Cambiar por la URL real de Rojas
+
+    async function verificarEstadoQR(codigo) {
+      const statusBox = document.getElementById('statusBox');
+      statusBox.className = "status-box status-loading";
+      statusBox.innerText = "Consultando base de datos...";
+
+      try {
+        /* Descomentar cuando Rojas tenga su API lista:
+        const response = await fetch(`${API_URL}?codigo=${encodeURIComponent(codigo)}`);
+        const data = await response.json();
+        
+        if (data.valido) {
+          statusBox.className = "status-box status-valid";
+          statusBox.innerText = `✅ VÁLIDO: ${data.mensaje || codigo}`;
+        } else {
+          statusBox.className = "status-box status-invalid";
+          statusBox.innerText = `❌ INVÁLIDO: ${data.mensaje || 'Código no registrado'}`;
+        }
+        */
+
+        // SIMULACIÓN (Para que pruebes mientras Rojas termina su API):
+        setTimeout(() => {
+          statusBox.className = "status-box status-valid";
+          statusBox.innerText = `✅ Leído: ${codigo}`;
+        }, 500);
+
+      } catch (error) {
+        statusBox.className = "status-box status-invalid";
+        statusBox.innerText = "⚠️ Error al conectar con el servidor";
+      }
+    }
+
+    function onScanSuccess(decodedText) {
+      codigoActual = decodedText;
+      
+      // Detener escáner temporalmente al leer uno
+      html5QrcodeScanner.clear();
+
+      document.getElementById('btnCopy').style.display = "block";
+      document.getElementById('btnReset').style.display = "block";
+
+      // Validar contra la API
+      verificarEstadoQR(decodedText);
+    }
+
+    function iniciarEscaner() {
+      document.getElementById('statusBox').style.display = "none";
+      document.getElementById('btnCopy').style.display = "none";
+      document.getElementById('btnReset').style.display = "none";
+
+      html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+      html5QrcodeScanner.render(onScanSuccess, () => {});
+    }
+
+    function reiniciarEscaneo() {
+      iniciarEscaner();
+    }
+
+    function copiarCodigo() {
+      navigator.clipboard.writeText(codigoActual);
+      alert("Código copiado al portapapeles");
+    }
+
+    // Iniciar al cargar
+    iniciarEscaner();
+  </script>
+
+</body>
+</html>
