@@ -63,6 +63,6 @@ def generar_qrs_masivos(cantidad):
 
 
 if __name__ == "__main__":
-    CANTIDAD_A_GENERAR = 300  # Generará 300 registros
+    CANTIDAD_A_GENERAR = 3000  # Generará 300 registros
     generar_qrs_masivos(CANTIDAD_A_GENERAR)
     conn.close()
